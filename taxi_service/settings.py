@@ -36,16 +36,16 @@ INTERNAL_IPS = [
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "debug_toolbar",
+    ...,
     "crispy_forms",
+    "crispy_bootstrap4",
     "taxi",
 ]
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
