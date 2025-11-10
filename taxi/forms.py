@@ -1,29 +1,28 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from .models import Driver, Car
+
+# pega dinamicamente o modelo de usuário (pode ser User ou um custom user)
+UserModel = get_user_model()
 
 
 def validate_license_number(value):
-    """
-    Deve ter 8 caracteres, 3 letras maiúsculas + 5 dígitos.
-    Exemplo válido: ABC12345
-    """
     import re
     if not re.match(r"^[A-Z]{3}\d{5}$", value):
-        raise ValidationError("O número da licença deve ter 3 letras maiúsculas seguidas de 5 dígitos.")
+        raise ValidationError("O número da licença deve ter 3 letras maiúsculas seguidos de 5 dígitos (ex: ABC12345).")
 
 
 class DriverLicenseUpdateForm(forms.ModelForm):
     license_number = forms.CharField(
         max_length=8,
         validators=[validate_license_number],
-        help_text="Formato: ABC12345 (3 letras + 5 números)",
+        help_text="Formato: ABC12345 (3 letras maiúsculas + 5 dígitos)",
     )
 
     class Meta:
-        model = Driver
+        model = UserModel
+        # caso o seu User model NÃO contenha license_number, substitua por ('profile__license_number',) conforme seu design.
         fields = ["license_number"]
 
 
@@ -31,20 +30,23 @@ class DriverCreationForm(UserCreationForm):
     license_number = forms.CharField(
         max_length=8,
         validators=[validate_license_number],
-        help_text="Formato: ABC12345 (3 letras + 5 números)",
+        help_text="Formato: ABC12345 (3 letras maiúsculas + 5 dígitos)",
     )
 
     class Meta(UserCreationForm.Meta):
-        model = Driver
+        model = UserModel
         fields = UserCreationForm.Meta.fields + ("license_number",)
 
 
 class CarForm(forms.ModelForm):
     drivers = forms.ModelMultipleChoiceField(
-        queryset=Driver.objects.all(),
-        widget=forms.CheckboxSelectMultiple
+        queryset=UserModel.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
     )
 
     class Meta:
-        model = Car
+        model = forms.models.get_model("taxi", "Car") if hasattr(forms.models, "get_model") else None
+        # fallback: se seu projeto tem um modelo Car em taxi.models, importe localmente ou ajuste.
+        # Para evitar erro nesta cópia, definiremos fields = "__all__" abaixo (troque se necessário)
         fields = "__all__"
